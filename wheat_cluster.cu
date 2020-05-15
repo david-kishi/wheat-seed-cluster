@@ -72,28 +72,35 @@ void updateCentroids(float *x, float *y, float *pred, float *cent){
         centB_y = 0,
         centC_x = 0,
         centC_y = 0;
+  int oneCnt = 0,
+      twoCnt = 0,
+      threeCnt = 0;
+
   
   // Sum of values
   for(int i = 0; i < 180; i++){
     if(pred[i] == 1.0){
       centA_x += x[i];
       centA_y += y[i];
+      oneCnt++;
     }else if(pred[i] == 2.0){
       centB_x += x[i];
       centB_y += y[i];
+      twoCnt++;
     }else{
       centC_x += x[i];
       centC_y += y[i];
+      threeCnt++;
     }
   }
 
   // Compute new centroids
-  cent[0] = centA_x / 180;
-  cent[1] = centA_y / 180;
-  cent[2] = centB_x / 180;
-  cent[3] = centB_y / 180;
-  cent[4] = centC_x / 180;
-  cent[5] = centC_y / 180;
+  cent[0] = centA_x / oneCnt;
+  cent[1] = centA_y / oneCnt;
+  cent[2] = centB_x / twoCnt;
+  cent[3] = centB_y / twoCnt;
+  cent[4] = centC_x / threeCnt;
+  cent[5] = centC_y / threeCnt;
 }
 
 int main(){
@@ -153,14 +160,13 @@ int main(){
   int   typeCount = 0, // keep count of feature
         trainingCount = 0, // keep count of size of training set
         entries = 0; // keep count of entry
-  const char* filename = "seeds_dataset.txt"; // file name
 
   // Open file
-  fp = fopen(filename, "r");
+  fp = fopen("data/seeds_dataset.txt", "r");
 
   // Check if file exists
   if (fp == NULL){
-    printf("Could not open file %s",filename);
+    printf("Could not open file %s","seeds_dataset.txt");
     return 1;
   }
 
@@ -300,6 +306,24 @@ int main(){
 
   checkPredictions(predicted_180, cat, 180);
 
+  // Output prediction and centroids to csv file
+
+  // Predictions
+  fp = fopen ("data/output.csv", "w");
+  fprintf (fp,"a,b,class\n");
+  for(int i = 0; i < 180; i++){
+    fprintf (fp," %f,%f,%f\n", area[i], perimeter[i], predicted_180[i]);
+  }
+  fclose(fp);
+
+  // Actual
+  fp = fopen ("data/actual.csv", "w");
+  fprintf (fp,"a,b,class\n");
+  for(int i = 0; i < 180; i++){
+    fprintf (fp,"%f,%f,%f\n", area[i], perimeter[i], cat[i]);
+  }
+  fclose(fp);
+
   printf("Initial Centroids:\n");
   for(int i = 0; i < 3; i++){
     printf("(%.4f, %.4f)\n", centroids[2*i], centroids[2*i+1]);
@@ -311,6 +335,14 @@ int main(){
   for(int i = 0; i < 3; i++){
     printf("(%.4f, %.4f)\n", centroids[2*i], centroids[2*i+1]);
   }
+
+  // Output Centroids to csv
+  fp = fopen ("data/centroids.csv", "w");
+  fprintf (fp,"x,y\n");
+  for(int i = 0; i < 3; i++){
+    fprintf (fp,"%f,%f\n", centroids[2*i], centroids[2*i+1]);
+  }
+  fclose(fp);
   
 
   // Free all memory
